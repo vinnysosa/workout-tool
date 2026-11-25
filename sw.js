@@ -1,17 +1,21 @@
-var CACHE_NAME = 'workout-buddy-shell-v1';
+var CACHE_NAME = 'workout-buddy-shell-v2';
 var SHELL_ASSETS = [
   '/',
   '/index.html',
   '/styles.css',
   '/config.js',
   '/app.js',
-  '/vendor/chart.umd.min.js',
   '/manifest.webmanifest',
   '/icons/favicon.svg',
   '/icons/icon-180.png',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
-  '/icons/icon-512-maskable.png'
+  '/icons/icon-512-maskable.png',
+  '/v1/',
+  '/v1/index.html',
+  '/v1/styles.css',
+  '/v1/app.js',
+  '/vendor/chart.umd.min.js'
 ];
 
 self.addEventListener('install', function(event) {
@@ -40,28 +44,26 @@ self.addEventListener('fetch', function(event) {
   var req = event.request;
   var url = new URL(req.url);
 
-  // Never intercept POST requests or cross-origin API calls (e.g. script.google.com)
   if (req.method !== 'GET' || url.origin !== self.location.origin) {
     return;
   }
 
-  // Network-first for HTML navigations so deploys take effect immediately, fallback to cached shell offline
-  if (req.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('.html')) {
+  if (req.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('.html') || url.pathname === '/v1/') {
+    var fallbackPath = url.pathname.startsWith('/v1') ? '/v1/index.html' : '/index.html';
     event.respondWith(
       fetch(req)
         .then(function(res) {
           var copy = res.clone();
-          caches.open(CACHE_NAME).then(function(cache) { cache.put('/index.html', copy); });
+          caches.open(CACHE_NAME).then(function(cache) { cache.put(fallbackPath, copy); });
           return res;
         })
         .catch(function() {
-          return caches.match('/index.html');
+          return caches.match(fallbackPath);
         })
     );
     return;
   }
 
-  // Stale-while-revalidate for static shell assets
   event.respondWith(
     caches.match(req).then(function(cached) {
       var networkFetch = fetch(req).then(function(res) {

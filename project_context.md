@@ -3,43 +3,44 @@
 *Last Updated: 2026-11-25*
 
 ## Project Goal
-Straighten out the Workout Buddy repository (`workout-tool`), connect the bound Google Apps Script via `clasp`, verify direct Google Sheet access (`gsheets`), publish a public GitHub repository (`vinnysosa/workout-tool`) serving an installable mobile PWA at `vsworkout.sosa-life.com` protected by server-side username/password authentication, and analyze workout logs to plan app enhancements.
+Deliver Workout Buddy v2.0 as a fast, mobile-first PWA at `vsworkout.sosa-life.com` tailored to 7–9 AM ET hypertrophy & muscle-refinement training — while keeping Classic v1 live side-by-side at `/v1/` against untouched backup tabs for zero-risk gym testing.
 
 ## Current Status
-- **Google Sheet Access**: Verified via `gsheets` (`vinny.sosa@gmail.com`) on `1wKA_jCCdKhNKkqk1LNaVhY_z3NduDU6Wbcxo6Vwok-k` (4 tabs: `Plan` 10×26, `Cardio` 5×26, `Latest` 7×26, `Log` 7×440).
-- **Clasp Connected & Deployed**: Bound to Apps Script `1Afn725LN5kGbByjCZHe02uhrRkwrGYDiPazmrwHSjSFac-I48-3HQx9o` (`rootDir: "gas"`). Verified 0 diff against July files, pushed hardened `gas/code.js`, and redeployed existing Web App deployment (`AKfycbxqJVQPEjbOibIY2HUJBkyq_gwlJqGlA5jTy_GsoLlWWMWe6kWNyqfKYh-oWiZtw_35` `@19`).
-- **GitHub Repo & Pages Live**: Created public repo `https://github.com/vinnysosa/workout-tool` (`main` branch, repo-local git identity & credential pinned to `vinnysosa`), vendored Chart.js 4.4.8 locally (`vendor/chart.umd.min.js`), and enabled GitHub Pages with custom domain `vsworkout.sosa-life.com`.
-- **Native Static PWA Built**: Unified single-page PWA (`index.html`, `styles.css`, `app.js`, `sw.js`, `manifest.webmanifest`, `icons/`) with sign-in gate, instant Workout ↔ Progress switching, offline app-shell caching, and home-screen icons.
-- **Snapshots Archived**: July CSV/XLSX exports and pre-PWA GAS HTML backups moved into gitignored `archive/`.
+- **Spreadsheet Timezone Fixed (`America/New_York`)**: Updated `1wKA_jCCdKhNKkqk1LNaVhY_z3NduDU6Wbcxo6Vwok-k` from `America/Los_Angeles` to `America/New_York`.
+- **Clean 3-Tab v2 Schema Created & Backfilled**:
+  - `Exercises_v2` (32 active movements across interleaved Muscle Slots, including pre-added **Forearms → EZ-Bar Forearm Curl @ 40 lbs** and separated Smith/TRX/EZ-Bar/Free-weight variants with independent working weights & sticky notes).
+  - `Log_v2` (all 439 historical entries shifted `+3 hours` to 7–9 AM ET and mapped to `SlotId` + `Muscle` + `Exercise`).
+  - `Cardio_v2` (structured columns for **Arm Crank** `Mins / Avg Watts / Peak Watts / Miles / Calories` and **StairMaster** `Floors / Mins / Level` + sticky notes).
+  - Original v1 tabs (`Plan`, `Latest`, `Log`, `Cardio`) remain **100% untouched**.
+- **v2.0 Frontend Built (`/`)**:
+  - Edge-to-edge full-width Muscle Slot bars (zero wasted horizontal margins).
+  - Blue-only palette with 1-tap Light / Dark mode (`color-scheme` + `light-dark()`).
+  - Touch + keyboard drag-and-drop slot reordering persisted to `Exercises_v2`.
+  - Per-slot exercise variant dropdown + in-app `+ Add Exercise / Variant` modal.
+  - 10-foot full-screen circular SVG rest timer (`<dialog>`) with huge countdown numerals + Screen Wake Lock API (`navigator.wakeLock`).
+  - Redesigned Progress dashboard combining **Literal Movement Chips (`lbs` + `+lb` gain)** AND **Plain Total Pounds Moved % (`Sets × Reps × Weight` vs. Day 1)** + inline SVG sparklines.
+- **Classic v1 Parachute (`/v1/`)**: Preserved at `/v1/` (`⋯ → Switch to Classic v1`) talking to the original 4 tabs under the same login token.
 
 ## Next Steps
-1. **Vinny one-time setup (2 mins)**:
-   - In Apps Script **Project Settings > Script Properties**, add `AUTH_USER` and `AUTH_PASS` (auto-hashes to salted SHA-256 on first sign-in).
-   - In DNS for `sosa-life.com`, add `CNAME` record `vsworkout` → `vinnysosa.github.io.`, then check **Enforce HTTPS** in GitHub Repo **Settings > Pages** once TLS cert provisions.
-2. **Next session / phase**: Analyze the 439 workout rows in `Log` + `Cardio` via `gsheets` and design enhancements for Workout Buddy.
+1. Test v2.0 in your next real morning workout (`Chest & Shoulders` auto-selected next!).
+2. Once v2 passes 1–2 live gym sessions, optionally archive/hide the old v1 tabs (`Plan`, `Latest`, `Log`, `Cardio`) and remove `/v1/`.
+3. Optional: Backfill the dates for the 3 Arm Crank Constant Work photo sessions into `Cardio_v2` if desired.
 
 ## Key Decisions
-- **Native Static PWA + GAS JSON API (Option 1B)** over iframe wrapper: Eliminates GAS's slow double-iframe load at the gym, avoids iOS standalone iframe cookie issues, and consolidates duplicate theme/nav code into a single codebase.
-- **Server-Side Auth in `ScriptProperties`**: Zero credentials touch git. `AUTH_PASS` entered in GAS Script Properties auto-upgrades to salted SHA-256 (`AUTH_SALT` + `AUTH_PASS_HASH`) on first login, 5-attempt rate limiting runs via `CacheService`, and `doGet` no longer serves unauthenticated HTML.
-- **Self-Hosted Chart.js (`vendor/chart.umd.min.js`)**: Zero runtime third-party CDN requests; 100% offline-cached in `sw.js`.
-- **POST `text/plain;charset=utf-8` Transport + Batched `bootstrap`/`history`**: Avoids GAS CORS preflight, keeps session tokens out of URLs, and cuts cold-start round-trips from 3 down to 1.
+- **Side-by-Side v2 Tabs + `/v1/` Escape Hatch**: Zero risk of getting stuck mid-workout if any UX detail needs tweaking.
+- **Slot + Variant Model in `Exercises_v2`**: Eliminates the separate `Latest` tab by storing each movement's working weight, reps, sets, clean streak, and sticky note directly on its `Exercises_v2` row.
+- **Two-Layer Transparent Progress Math**: Combines literal working weights (`50 lb (+15 lb)`) and plain total pounds moved (`Sets × Reps × Weight` vs. Day 1, `+XX%`) — no opaque 1RM formulas.
 
 ## File Inventory
 
 | File | Description |
 |---|---|
-| `index.html` | Single-page PWA markup (Sign-In gate, Workout logger, Progress history) |
-| `styles.css` | Theme CSS variables (7 themes), responsive mobile styles, safe-area insets |
-| `app.js` | Auth flow, fetch RPC client, Workout/Cardio/Timer/Progress/Chart UI, PWA install |
-| `config.js` | Public endpoint config (`GAS_API_URL`, `APP_VERSION`) — never stores secrets |
-| `manifest.webmanifest` | Standalone PWA manifest (`id: "/"`, 192/512 + maskable icons) |
-| `sw.js` | Service worker caching static app shell (`GET` same-origin only) |
-| `icons/` | Generated dumbbell icons (`favicon.svg`, `icon-180.png`, `icon-192.png`, `icon-512.png`, `icon-512-maskable.png`) |
-| `vendor/chart.umd.min.js` | Self-hosted Chart.js 4.4.8 UMD bundle for Progress charts |
-| `CNAME` | Custom domain (`vsworkout.sosa-life.com`) for GitHub Pages |
-| `robots.txt` / `.nojekyll` | Search crawler disallow + static asset serving on GitHub Pages |
-| `gas/code.js` | Google Apps Script backend (auth, rate limiting, Sheet read/write API) |
-| `gas/appsscript.json` | GAS manifest (`America/New_York`, V8, `USER_DEPLOYING` / `ANYONE_ANONYMOUS`) |
-| `.clasp.json` / `.claspignore` | Clasp connection config (`rootDir: "gas"`) |
-| `package.json` | Convenience npm scripts (`clasp:pull`, `clasp:push`, `clasp:deploy`, `serve`) |
-| `archive/` | Gitignored backup of July CSV/XLSX snapshots and pre-PWA GAS HTML templates |
+| `index.html` | Workout Buddy v2.0 PWA markup (Log, Progress, Circular Timer `<dialog>`, `+ Add Exercise` `<dialog>`) |
+| `styles.css` | Edge-to-edge Blue Light/Dark design system (`color-scheme`, `light-dark()`, full-bleed bars) |
+| `app.js` | v2 state, pointer/keyboard drag-and-drop, variant switcher, Wake Lock circular timer, Progress rollup |
+| `v1/` | Preserved Classic v1 app (`v1/index.html`, `v1/styles.css`, `v1/app.js`) backed by original Sheet tabs |
+| `config.js` | Public endpoint config (`GAS_API_URL`, `APP_VERSION: '2.0.0'`) |
+| `sw.js` | Service worker (`workout-buddy-shell-v2`) caching both v2 and `/v1/` shells |
+| `icons/` | Blue dumbbell home-screen icons (`favicon.svg`, `180`, `192`, `512`, `512-maskable`) |
+| `gas/code.js` | Authenticated GAS JSON API serving both `v2_*` endpoints and legacy `v1` endpoints |
+| `archive/` | Gitignored local backups of July CSV/XLSX exports and original GAS HTML files |

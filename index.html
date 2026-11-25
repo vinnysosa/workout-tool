@@ -5,7 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="robots" content="noindex, nofollow, noarchive">
   <meta name="referrer" content="strict-origin-when-cross-origin">
-  <meta name="theme-color" content="#4a148c" id="metaThemeColor">
+  <meta name="color-scheme" content="light dark">
+  <script>
+    try {
+      document.querySelector('meta[name="color-scheme"]').content = localStorage.getItem('wb-color-scheme') || 'light dark';
+    } catch (e) {}
+  </script>
+  <meta name="theme-color" content="#0b3b8c" id="metaThemeColor">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -17,34 +23,48 @@
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-  <div class="container">
-    <div class="header-row">
-      <h2 id="pageTitle">Workout Buddy</h2>
-      <div class="theme-picker-wrap">
-        <button type="button" class="theme-btn" id="settingsBtn" aria-label="Settings and themes" title="Settings">&#9881;</button>
-        <div class="theme-dropdown" id="themeDropdown">
-          <div class="menu-section-label">Theme</div>
-          <div id="themeOptions"></div>
-          <div class="menu-divider" id="menuActionDivider" hidden></div>
-          <button type="button" id="installAppBtn" class="menu-action-btn" hidden>Install App</button>
-          <button type="button" id="signOutBtn" class="menu-action-btn danger" hidden>Sign Out</button>
+  <div class="app-frame">
+    <!-- Top Chrome Bar (Edge-to-Edge) -->
+    <header class="top-bar">
+      <div class="top-bar-left">
+        <span class="brand-title">Workout</span>
+        <nav class="mode-switch" id="topNav" hidden aria-label="Primary sections">
+          <button type="button" class="mode-tab active" data-page="workout">Log</button>
+          <button type="button" class="mode-tab" data-page="history">Progress</button>
+        </nav>
+      </div>
+      <div class="top-bar-right">
+        <button type="button" class="icon-btn" id="themeToggleBtn" aria-label="Toggle light or dark mode" title="Toggle Light / Dark">
+          <span class="icon-sun" aria-hidden="true">&#9728;</span>
+          <span class="icon-moon" aria-hidden="true">&#9790;</span>
+        </button>
+        <div class="menu-wrap">
+          <button type="button" class="icon-btn" id="menuBtn" aria-label="More options" title="Options">&#8943;</button>
+          <div class="overflow-menu" id="overflowMenu" hidden>
+            <button type="button" id="installAppBtn" class="menu-item" hidden>Install App</button>
+            <a href="/v1/" class="menu-item">Switch to Classic v1</a>
+            <button type="button" id="signOutBtn" class="menu-item danger" hidden>Sign Out</button>
+          </div>
         </div>
       </div>
-    </div>
-    <p id="installStatus" class="sr-status" role="status"></p>
+    </header>
 
-    <!-- Sign-In Gate (placed at top so mobile keyboards never cover Sign In) -->
+    <p id="installStatus" class="sr-only" role="status"></p>
+    <p id="reorderLive" class="sr-only" aria-live="polite"></p>
+
+    <!-- Sign-In Gate (Top-aligned so mobile keyboards never cover Sign In) -->
     <section id="authGate" class="auth-gate" hidden>
-      <div class="auth-card">
-        <p class="auth-subtitle">Sign in to load your workout plan and log sets.</p>
+      <div class="auth-panel">
+        <h1 class="auth-heading">Sign in</h1>
+        <p class="auth-sub">Unlock your workout split and history.</p>
         <form id="loginForm" class="auth-form">
-          <div class="auth-field">
-            <label class="auth-label" for="loginUsername">Username</label>
+          <div class="field-group">
+            <label class="field-label" for="loginUsername">Username</label>
             <input
               type="text"
               id="loginUsername"
               name="username"
-              class="auth-input"
+              class="text-input"
               autocomplete="username"
               autocapitalize="none"
               autocorrect="off"
@@ -53,130 +73,249 @@
               required
             >
           </div>
-          <div class="auth-field">
-            <label class="auth-label" for="loginPassword">Password</label>
-            <div class="auth-input-wrap">
+          <div class="field-group">
+            <label class="field-label" for="loginPassword">Password</label>
+            <div class="pw-wrap">
               <input
                 type="password"
                 id="loginPassword"
                 name="password"
-                class="auth-input auth-input-pw"
+                class="text-input pw-input"
                 autocomplete="current-password"
                 enterkeyhint="done"
                 required
               >
-              <button type="button" id="togglePwBtn" class="pw-toggle-btn" aria-pressed="false">Show</button>
+              <button type="button" id="togglePwBtn" class="pw-btn" aria-pressed="false">Show</button>
             </div>
           </div>
-          <p id="loginError" class="auth-error" role="alert" hidden></p>
-          <button type="submit" id="loginSubmitBtn" class="btn-submit">Sign In</button>
+          <p id="loginError" class="form-error" role="alert" hidden></p>
+          <button type="submit" id="loginSubmitBtn" class="primary-btn">Sign In</button>
         </form>
       </div>
     </section>
 
-    <!-- Authenticated App Shell -->
+    <!-- Main Authenticated Shell -->
     <main id="appShell" hidden>
-      <div class="page-nav">
-        <button type="button" class="page-nav-link" id="pageToggleBtn">View Progress &rarr;</button>
-      </div>
-
-      <!-- Page 1: Workout Logger -->
+      <!-- PAGE 1: WORKOUT LOGGER -->
       <section id="workoutPage">
-        <div class="group-tabs" id="groupTabs"></div>
-        <div id="exerciseList"><div class="loading">Loading workout plan&hellip;</div></div>
+        <div class="split-strip" id="splitTabs" role="tablist" aria-label="Workout splits"></div>
 
-        <div class="cardio-card">
-          <span class="card-section-label cardio">Cardio</span>
-          <span class="cardio-section-title">Cardio</span>
-          <div class="cardio-today" id="cardioToday"></div>
-          <div class="cardio-top-row">
-            <div>
-              <label class="cardio-label" for="cardioType">Activity</label>
-              <select class="cardio-select" id="cardioType">
-                <option value="">Select activity...</option>
-                <option>Running</option>
-                <option>Rowing</option>
-                <option>Cycling</option>
-                <option>Elliptical</option>
-                <option>Arm Crank</option>
-              </select>
-            </div>
-            <div class="mins-group">
-              <label class="cardio-label" for="cardioMins">Mins</label>
-              <input type="number" inputmode="numeric" class="cardio-mins" id="cardioMins" placeholder="30" min="1">
-            </div>
-          </div>
-          <div class="intensity-row">
-            <span class="cardio-label">Intensity</span>
-            <div class="intensity-pills" id="cardioIntensityPills">
-              <button type="button" class="intensity-pill">Easy</button>
-              <button type="button" class="intensity-pill">Moderate</button>
-              <button type="button" class="intensity-pill">Hard</button>
-              <button type="button" class="intensity-pill">Max</button>
-            </div>
-          </div>
-          <div class="note-toggle" id="cardioNoteToggle">+ Add note</div>
-          <div class="note-section" id="cardioNoteSection">
-            <div class="note-row">
-              <textarea class="note-input" id="cardioNoteInput" rows="1" placeholder="Add a note..."></textarea>
-              <button type="button" class="note-clear" id="cardioNoteClear">Clear</button>
-            </div>
-          </div>
-          <button type="button" class="btn-submit" id="cardioSubmitBtn">Log Cardio</button>
+        <div class="slot-list" id="slotList">
+          <div class="state-msg">Loading workout&hellip;</div>
         </div>
 
-        <div id="sessionSummary"></div>
+        <!-- Collapsible Cardio Finisher Bar -->
+        <div class="finisher-bar" id="cardioBar">
+          <button type="button" class="finisher-header" id="cardioHeaderBtn" aria-expanded="false">
+            <span class="muscle-tag cardio-tag">Cardio</span>
+            <span class="finisher-title">Arm Crank / StairMaster</span>
+            <span class="finisher-status" id="cardioHeaderStatus"></span>
+            <span class="bar-chevron" aria-hidden="true">&#x203A;</span>
+          </button>
+          <div class="finisher-body" id="cardioBody" hidden>
+            <div class="seg-pills" id="cardioMachineTabs">
+              <button type="button" class="seg-pill active" data-machine="Arm Crank">Arm Crank</button>
+              <button type="button" class="seg-pill" data-machine="StairMaster">StairMaster</button>
+            </div>
+
+            <!-- Arm Crank Fields (Matched to Constant Work Screen) -->
+            <div id="armCrankFields" class="metric-grid cols-3">
+              <label class="metric-box">
+                <span class="metric-lbl">Mins</span>
+                <input type="number" inputmode="numeric" id="acMinutes" class="metric-inp" value="15" min="1">
+              </label>
+              <label class="metric-box">
+                <span class="metric-lbl">Avg Watts</span>
+                <input type="number" inputmode="numeric" id="acAvgWatts" class="metric-inp" placeholder="49" min="0">
+              </label>
+              <label class="metric-box">
+                <span class="metric-lbl">Peak Watts</span>
+                <input type="number" inputmode="numeric" id="acPeakWatts" class="metric-inp" placeholder="66" min="0">
+              </label>
+              <label class="metric-box">
+                <span class="metric-lbl">Miles</span>
+                <input type="number" inputmode="decimal" step="0.01" id="acMiles" class="metric-inp" placeholder="2.88" min="0">
+              </label>
+              <label class="metric-box">
+                <span class="metric-lbl">Calories</span>
+                <input type="number" inputmode="numeric" id="acCalories" class="metric-inp" placeholder="90" min="0">
+              </label>
+            </div>
+
+            <!-- StairMaster Fields -->
+            <div id="stairMasterFields" class="metric-grid cols-3" hidden>
+              <label class="metric-box">
+                <span class="metric-lbl">Floors</span>
+                <input type="number" inputmode="numeric" id="smFloors" class="metric-inp" value="30" min="1">
+              </label>
+              <label class="metric-box">
+                <span class="metric-lbl">Mins</span>
+                <input type="number" inputmode="numeric" id="smMinutes" class="metric-inp" placeholder="12" min="1">
+              </label>
+              <label class="metric-box">
+                <span class="metric-lbl">Level</span>
+                <input type="number" inputmode="numeric" id="smLevel" class="metric-inp" placeholder="7" min="1">
+              </label>
+            </div>
+
+            <div class="note-box">
+              <textarea id="cardioNote" class="note-area" rows="1" placeholder="Cardio note (stays sticky)..."></textarea>
+              <button type="button" class="clear-btn" id="cardioNoteClear">Clear</button>
+            </div>
+
+            <button type="button" class="primary-btn" id="cardioSubmitBtn">Log Cardio</button>
+          </div>
+        </div>
+
+        <!-- Bottom Action Strip -->
+        <div class="bottom-strip">
+          <button type="button" class="outline-btn" id="openAddSlotBtn">+ Add Exercise / Muscle</button>
+        </div>
+
+        <!-- Today's Session Summary Strip -->
+        <div id="todaySummary"></div>
       </section>
 
-      <!-- Page 2: Progress History -->
+      <!-- PAGE 2: PROGRESS DASHBOARD -->
       <section id="historyPage" hidden>
-        <div class="view-toggle" id="historyViewToggle">
-          <button type="button" class="view-btn active" data-view="log">Session Log</button>
-          <button type="button" class="view-btn" data-view="exercise">By Exercise</button>
-          <button type="button" class="view-btn" data-view="charts">Charts</button>
-        </div>
-
-        <div class="filter-row">
-          <select class="filter-select" id="timeFilter" aria-label="Time range">
-            <option value="30">Last 30 days</option>
-            <option value="60">Last 60 days</option>
-            <option value="90">Last 90 days</option>
-            <option value="180">Last 6 months</option>
-            <option value="270">Last 9 months</option>
-            <option value="365">Last year</option>
+        <div class="progress-toolbar">
+          <div class="seg-pills compact" id="progViewTabs">
+            <button type="button" class="seg-pill active" data-pview="muscles">By Muscle</button>
+            <button type="button" class="seg-pill" data-pview="sessions">Sessions</button>
+            <button type="button" class="seg-pill" data-pview="cardio">Cardio</button>
+          </div>
+          <select id="progRangeSelect" class="compact-select" aria-label="Time window">
+            <option value="60">60d</option>
+            <option value="90" selected>90d</option>
+            <option value="180">6mo</option>
+            <option value="365">1yr</option>
           </select>
         </div>
 
-        <div id="logView">
-          <div id="historyContent"><div class="loading">Loading&hellip;</div></div>
+        <div class="split-filter-bar" id="progSplitFilter">
+          <button type="button" class="filter-chip active" data-split="ALL">All Splits</button>
+          <button type="button" class="filter-chip" data-split="Back & Biceps">Back &amp; Bi</button>
+          <button type="button" class="filter-chip" data-split="Chest & Shoulders">Chest &amp; Shld</button>
+          <button type="button" class="filter-chip" data-split="Legs & Abs">Legs &amp; Abs</button>
         </div>
 
-        <div id="exerciseView" hidden>
-          <div class="collapse-all-row">
-            <button type="button" class="collapse-all-btn" id="collapseAllBtn">Collapse All</button>
-          </div>
-          <div id="exerciseContent"><div class="loading">Loading&hellip;</div></div>
-        </div>
-
-        <div id="chartsView" hidden>
-          <div class="chart-controls">
-            <label for="chartGroupSelect">Muscle Group</label>
-            <select id="chartGroupSelect">
-              <option value="">Select a group&hellip;</option>
-            </select>
-          </div>
-          <div class="chart-wrap">
-            <div class="chart-canvas-box" id="chartCanvasBox" hidden>
-              <canvas id="progressChart"></canvas>
-            </div>
-            <div id="chartEmpty" class="chart-empty">Select a muscle group to see progress.</div>
-          </div>
+        <div id="progContent">
+          <div class="state-msg">Loading progress&hellip;</div>
         </div>
       </section>
     </main>
   </div>
 
-  <script src="/vendor/chart.umd.min.js" defer></script>
+  <!-- 10-Foot Full-Screen Circular Rest Timer Modal -->
+  <dialog id="timerDialog" class="timer-dialog" aria-labelledby="timerTitle" closedby="any">
+    <div class="timer-stage">
+      <div class="timer-top">
+        <h2 id="timerTitle" class="timer-ex-name">Rest Timer</h2>
+        <span id="timerStateBadge" class="timer-badge">Resting</span>
+      </div>
+
+      <div class="timer-ring-wrap">
+        <svg class="timer-svg" viewBox="0 0 260 260" aria-hidden="true">
+          <circle class="timer-track" cx="130" cy="130" r="114"></circle>
+          <circle class="timer-progress" id="timerCircle" cx="130" cy="130" r="114"></circle>
+        </svg>
+        <div class="timer-readout">
+          <div class="timer-digits" id="timerDigits">60</div>
+          <div class="timer-unit" id="timerUnit">seconds</div>
+        </div>
+      </div>
+
+      <div class="timer-controls">
+        <button type="button" class="timer-adj-btn" id="timerMinusBtn">&minus;15s</button>
+        <button type="button" class="timer-done-btn" id="timerCloseBtn" autofocus>Done</button>
+        <button type="button" class="timer-adj-btn" id="timerPlusBtn">+15s</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- In-App + Add Exercise / Variant Modal -->
+  <dialog id="addExerciseDialog" class="sheet-dialog" aria-labelledby="addExTitle" closedby="closerequest">
+    <form id="addExerciseForm" class="sheet-form">
+      <div class="sheet-head">
+        <h2 id="addExTitle">Add Exercise</h2>
+        <button type="button" class="icon-btn" id="closeAddExBtn" aria-label="Close">&times;</button>
+      </div>
+
+      <input type="hidden" id="addExMode" value="slot">
+      <input type="hidden" id="addExSlotId" value="">
+
+      <div class="field-group" id="addExGroupWrap">
+        <label class="field-label" for="addExGroup">Workout Split</label>
+        <select id="addExGroup" class="text-input">
+          <option value="Back & Biceps">Back &amp; Biceps</option>
+          <option value="Chest & Shoulders">Chest &amp; Shoulders</option>
+          <option value="Legs & Abs">Legs &amp; Abs</option>
+        </select>
+      </div>
+
+      <div class="field-group" id="addExMuscleWrap">
+        <label class="field-label" for="addExMuscle">Target Muscle</label>
+        <input
+          type="text"
+          id="addExMuscle"
+          class="text-input"
+          list="muscleSuggestions"
+          placeholder="e.g. Forearms, Biceps, Glutes"
+          required
+        >
+        <datalist id="muscleSuggestions">
+          <option value="Chest"></option>
+          <option value="Shoulders"></option>
+          <option value="Rear Delts"></option>
+          <option value="Triceps"></option>
+          <option value="Lats"></option>
+          <option value="Mid-Back"></option>
+          <option value="Upper Back"></option>
+          <option value="Lower Back"></option>
+          <option value="Biceps"></option>
+          <option value="Forearms"></option>
+          <option value="Quads"></option>
+          <option value="Hamstrings"></option>
+          <option value="Glutes"></option>
+          <option value="Calves"></option>
+          <option value="Abs"></option>
+        </datalist>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" for="addExName">Exercise / Machine Name</label>
+        <input type="text" id="addExName" class="text-input" placeholder="e.g. EZ-Bar Forearm Curl" required>
+      </div>
+
+      <div class="metric-grid cols-3">
+        <label class="metric-box">
+          <span class="metric-lbl">Goal Sets</span>
+          <input type="number" inputmode="numeric" id="addExSets" class="metric-inp" value="3" min="1" required>
+        </label>
+        <label class="metric-box">
+          <span class="metric-lbl">Goal Reps</span>
+          <input type="number" inputmode="numeric" id="addExReps" class="metric-inp" value="12" min="1" required>
+        </label>
+        <label class="metric-box">
+          <span class="metric-lbl">Start Lbs</span>
+          <input type="number" inputmode="decimal" id="addExWeight" class="metric-inp" value="40" min="0" step="2.5" required>
+        </label>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" for="addExNote">Setup / Sticky Note (Optional)</label>
+        <input type="text" id="addExNote" class="text-input" placeholder="Seat setting, grip, or cue...">
+      </div>
+
+      <p id="addExError" class="form-error" role="alert" hidden></p>
+
+      <div class="sheet-actions">
+        <button type="button" class="outline-btn" id="cancelAddExBtn">Cancel</button>
+        <button type="submit" class="primary-btn" id="submitAddExBtn">Save Exercise</button>
+      </div>
+    </form>
+  </dialog>
+
   <script src="/config.js" defer></script>
   <script src="/app.js" defer></script>
 </body>

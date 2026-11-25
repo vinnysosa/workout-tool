@@ -5,5 +5,5 @@
  */
 window.WORKOUT_CONFIG = {
   GAS_API_URL: 'https://script.google.com/macros/s/AKfycbxqJVQPEjbOibIY2HUJBkyq_gwlJqGlA5jTy_GsoLlWWMWe6kWNyqfKYh-oWiZtw_35/exec',
-  APP_VERSION: '1.0.0'
+  APP_VERSION: '2.0.0'
 };
