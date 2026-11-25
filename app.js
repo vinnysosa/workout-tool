@@ -231,7 +231,7 @@
 
   /* ===== Workout Split Tabs & Slot Grouping ===== */
   function getGroups() {
-    var orderPref = ['Back & Biceps', 'Chest & Shoulders', 'Legs & Abs'];
+    var orderPref = ['Legs & Abs', 'Back & Biceps', 'Chest & Shoulders'];
     var seen = {};
     var out = [];
     orderPref.forEach(function(g) {

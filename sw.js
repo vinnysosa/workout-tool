@@ -1,4 +1,4 @@
-var CACHE_NAME = 'workout-buddy-shell-v2';
+var CACHE_NAME = 'workout-buddy-shell-v3';
 var SHELL_ASSETS = [
   '/',
   '/index.html',
