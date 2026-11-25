@@ -1,0 +1,16 @@
+{
+  "name": "workout-tool",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Workout Buddy — Mobile PWA + Google Apps Script + Google Sheets backend",
+  "scripts": {
+    "clasp:user": "clasp -u personal show-authorized-user",
+    "clasp:login": "clasp -u personal login",
+    "clasp:pull": "clasp -u personal pull",
+    "clasp:push": "clasp -u personal push",
+    "clasp:deployments": "clasp -u personal deployments",
+    "clasp:deploy": "clasp -u personal update-deployment AKfycbxqJVQPEjbOibIY2HUJBkyq_gwlJqGlA5jTy_GsoLlWWMWe6kWNyqfKYh-oWiZtw_35 -d \"PWA JSON API + Auth\"",
+    "clasp:open": "clasp -u personal open-script",
+    "serve": "python3 -m http.server 8080"
+  }
+}

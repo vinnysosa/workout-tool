@@ -1,0 +1,7 @@
+.DS_Store
+.claude/
+archive/
+node_modules/
+.clasprc.json
+*.env
+.env*

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="theme-color" content="#4a148c" id="metaThemeColor">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Workout">
+  <title>Workout Buddy</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/icons/icon-180.png">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header-row">
+      <h2 id="pageTitle">Workout Buddy</h2>
+      <div class="theme-picker-wrap">
+        <button type="button" class="theme-btn" id="settingsBtn" aria-label="Settings and themes" title="Settings">&#9881;</button>
+        <div class="theme-dropdown" id="themeDropdown">
+          <div class="menu-section-label">Theme</div>
+          <div id="themeOptions"></div>
+          <div class="menu-divider" id="menuActionDivider" hidden></div>
+          <button type="button" id="installAppBtn" class="menu-action-btn" hidden>Install App</button>
+          <button type="button" id="signOutBtn" class="menu-action-btn danger" hidden>Sign Out</button>
+        </div>
+      </div>
+    </div>
+    <p id="installStatus" class="sr-status" role="status"></p>
+
+    <!-- Sign-In Gate (placed at top so mobile keyboards never cover Sign In) -->
+    <section id="authGate" class="auth-gate" hidden>
+      <div class="auth-card">
+        <p class="auth-subtitle">Sign in to load your workout plan and log sets.</p>
+        <form id="loginForm" class="auth-form">
+          <div class="auth-field">
+            <label class="auth-label" for="loginUsername">Username</label>
+            <input
+              type="text"
+              id="loginUsername"
+              name="username"
+              class="auth-input"
+              autocomplete="username"
+              autocapitalize="none"
+              autocorrect="off"
+              spellcheck="false"
+              enterkeyhint="next"
+              required
+            >
+          </div>
+          <div class="auth-field">
+            <label class="auth-label" for="loginPassword">Password</label>
+            <div class="auth-input-wrap">
+              <input
+                type="password"
+                id="loginPassword"
+                name="password"
+                class="auth-input auth-input-pw"
+                autocomplete="current-password"
+                enterkeyhint="done"
+                required
+              >
+              <button type="button" id="togglePwBtn" class="pw-toggle-btn" aria-pressed="false">Show</button>
+            </div>
+          </div>
+          <p id="loginError" class="auth-error" role="alert" hidden></p>
+          <button type="submit" id="loginSubmitBtn" class="btn-submit">Sign In</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Authenticated App Shell -->
+    <main id="appShell" hidden>
+      <div class="page-nav">
+        <button type="button" class="page-nav-link" id="pageToggleBtn">View Progress &rarr;</button>
+      </div>
+
+      <!-- Page 1: Workout Logger -->
+      <section id="workoutPage">
+        <div class="group-tabs" id="groupTabs"></div>
+        <div id="exerciseList"><div class="loading">Loading workout plan&hellip;</div></div>
+
+        <div class="cardio-card">
+          <span class="card-section-label cardio">Cardio</span>
+          <span class="cardio-section-title">Cardio</span>
+          <div class="cardio-today" id="cardioToday"></div>
+          <div class="cardio-top-row">
+            <div>
+              <label class="cardio-label" for="cardioType">Activity</label>
+              <select class="cardio-select" id="cardioType">
+                <option value="">Select activity...</option>
+                <option>Running</option>
+                <option>Rowing</option>
+                <option>Cycling</option>
+                <option>Elliptical</option>
+                <option>Arm Crank</option>
+              </select>
+            </div>
+            <div class="mins-group">
+              <label class="cardio-label" for="cardioMins">Mins</label>
+              <input type="number" inputmode="numeric" class="cardio-mins" id="cardioMins" placeholder="30" min="1">
+            </div>
+          </div>
+          <div class="intensity-row">
+            <span class="cardio-label">Intensity</span>
+            <div class="intensity-pills" id="cardioIntensityPills">
+              <button type="button" class="intensity-pill">Easy</button>
+              <button type="button" class="intensity-pill">Moderate</button>
+              <button type="button" class="intensity-pill">Hard</button>
+              <button type="button" class="intensity-pill">Max</button>
+            </div>
+          </div>
+          <div class="note-toggle" id="cardioNoteToggle">+ Add note</div>
+          <div class="note-section" id="cardioNoteSection">
+            <div class="note-row">
+              <textarea class="note-input" id="cardioNoteInput" rows="1" placeholder="Add a note..."></textarea>
+              <button type="button" class="note-clear" id="cardioNoteClear">Clear</button>
+            </div>
+          </div>
+          <button type="button" class="btn-submit" id="cardioSubmitBtn">Log Cardio</button>
+        </div>
+
+        <div id="sessionSummary"></div>
+      </section>
+
+      <!-- Page 2: Progress History -->
+      <section id="historyPage" hidden>
+        <div class="view-toggle" id="historyViewToggle">
+          <button type="button" class="view-btn active" data-view="log">Session Log</button>
+          <button type="button" class="view-btn" data-view="exercise">By Exercise</button>
+          <button type="button" class="view-btn" data-view="charts">Charts</button>
+        </div>
+
+        <div class="filter-row">
+          <select class="filter-select" id="timeFilter" aria-label="Time range">
+            <option value="30">Last 30 days</option>
+            <option value="60">Last 60 days</option>
+            <option value="90">Last 90 days</option>
+            <option value="180">Last 6 months</option>
+            <option value="270">Last 9 months</option>
+            <option value="365">Last year</option>
+          </select>
+        </div>
+
+        <div id="logView">
+          <div id="historyContent"><div class="loading">Loading&hellip;</div></div>
+        </div>
+
+        <div id="exerciseView" hidden>
+          <div class="collapse-all-row">
+            <button type="button" class="collapse-all-btn" id="collapseAllBtn">Collapse All</button>
+          </div>
+          <div id="exerciseContent"><div class="loading">Loading&hellip;</div></div>
+        </div>
+
+        <div id="chartsView" hidden>
+          <div class="chart-controls">
+            <label for="chartGroupSelect">Muscle Group</label>
+            <select id="chartGroupSelect">
+              <option value="">Select a group&hellip;</option>
+            </select>
+          </div>
+          <div class="chart-wrap">
+            <div class="chart-canvas-box" id="chartCanvasBox" hidden>
+              <canvas id="progressChart"></canvas>
+            </div>
+            <div id="chartEmpty" class="chart-empty">Select a muscle group to see progress.</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/vendor/chart.umd.min.js" defer></script>
+  <script src="/config.js" defer></script>
+  <script src="/app.js" defer></script>
+</body>
+</html>
