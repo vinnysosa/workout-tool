@@ -1,16 +1,17 @@
-var CACHE_NAME = 'workout-buddy-shell-v4';
+var CACHE_NAME = 'workout-buddy-shell-v5';
 var SHELL_ASSETS = [
   '/',
   '/index.html',
   '/styles.css',
   '/config.js',
   '/app.js',
-  '/manifest.webmanifest?v=4',
+  '/manifest.webmanifest',
+  '/apple-touch-icon.png',
   '/icons/favicon.svg',
-  '/icons/icon-180.png?v=4',
-  '/icons/icon-192.png?v=4',
-  '/icons/icon-512.png?v=4',
-  '/icons/icon-512-maskable.png?v=4',
+  '/icons/icon-180.png',
+  '/icons/icon-192.png',
+  '/icons/icon-512.png',
+  '/icons/icon-512-maskable.png',
   '/v1/',
   '/v1/index.html',
   '/v1/styles.css',
